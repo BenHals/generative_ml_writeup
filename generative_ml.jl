@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.37
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -545,6 +545,44 @@ _Variational_ inference is when we have a distribution ($p(X)$) that we are inte
 
 In a VAE, we have a distribution of the latent variable, $p(z)$, which we usually assume to be a Gaussian (for a few different reasons, it's easy to work with and has some nice iterpolation properties). However, the distribution of the latent variable for a given input, $p(z|X)$, could be anything and is very difficult to calculate. We instead perform _variational inference_ by estimating $p(z|X)$ as $q(z|X)$, which we also estimate as a unit Gaussian. This means we have to optimize how closely $q$ estimates $p$, hence the variational loss!
 """
+
+# ╔═╡ 186e740d-b5a4-49c8-b411-f4c89b2eb453
+begin
+	VAE_latents = randn(10000)
+	VAE_x = map(z -> randn((2, 1)).*abs(1) .+ (z, z), VAE_latents)
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1)
+end
+
+# ╔═╡ fafd81aa-87bc-40bf-bf8d-060532e0600e
+md"""
+How could this have been generated as a latent variable process?
+
+We could have a variable $z$ distributed as a Gaussian, generating the mean location for the final observation X, _i.e.,_ $x \sim N((z, z), 1)$
+"""
+
+# ╔═╡ 371d025b-1f38-442f-8f6e-11277766e507
+begin
+	possible_latents = LinRange(-4, 4, 1000)
+	@bind VAE_test Slider(1:50:1000)
+end
+
+# ╔═╡ 34473ac9-1c5a-44b4-a0f1-327623c3b672
+begin
+	selected_z = possible_latents[VAE_test]
+	plot(possible_latents, [pdf(Normal(), z) for z in possible_latents], title="Sample of z")
+	vline!([selected_z], color="red")
+end
+	
+
+# ╔═╡ 4e4fe325-69f4-4ebb-b331-e53621f5d9c5
+begin
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
+	selected_z_sample = randn((2, 1000)) .+ (selected_z, selected_z)
+	scatter!(selected_z_sample[1, :], selected_z_sample[2, :], alpha=pdf(Normal(), selected_z)*2 + 0.2)
+end
+
+# ╔═╡ 5de9295e-4fd3-4db2-8f63-721697ba3f75
+
 
 # ╔═╡ bd3953e5-c712-4f76-812b-5880434708e4
 md"""
@@ -2978,6 +3016,12 @@ version = "1.4.1+1"
 # ╟─0ba6585d-20a3-4ec4-966c-0ff5a37a0d15
 # ╠═92da23df-2882-48e3-b22e-19e6082599fb
 # ╟─2b8e2741-0b9a-469e-a2c4-103828ebd8ca
+# ╠═186e740d-b5a4-49c8-b411-f4c89b2eb453
+# ╟─fafd81aa-87bc-40bf-bf8d-060532e0600e
+# ╟─371d025b-1f38-442f-8f6e-11277766e507
+# ╟─34473ac9-1c5a-44b4-a0f1-327623c3b672
+# ╟─4e4fe325-69f4-4ebb-b331-e53621f5d9c5
+# ╠═5de9295e-4fd3-4db2-8f63-721697ba3f75
 # ╠═bd3953e5-c712-4f76-812b-5880434708e4
 # ╠═f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 # ╟─00000000-0000-0000-0000-000000000001
