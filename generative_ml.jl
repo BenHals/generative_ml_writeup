@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.37
 
 using Markdown
 using InteractiveUtils
@@ -536,12 +536,14 @@ Variational Auto-encoder's are usually talked about as if they are a type of mod
 
 To train a latent variable model, we use an auto-encoding strategy. First, we _encode_ a sample $X$ into the latent variable space, _i.e.,_ find $q(z|X)$. Then we sample from $q(z|X)$ to get a variational sample. Then we _decode_ this sample back into the original data space to get $\hat{X}$ using $\hat{X} \sim p(X|z)$.
 
-We have two loss terms, one is the _reconstruction loss_, which aims to reduce the difference between $X$ and $\hat{X}$. The second is the variational loss, which aims to reduce the difference between the distribution of the latent variable, $q()$, and the prior distribution (again usually a standard normal).
+We have two loss terms, one is the _reconstruction loss_, which aims to reduce the difference between $X$ and $\hat{X}$. The second is the variational loss, which aims to reduce the difference between the distribution of the latent variable, $q$, and the prior distribution (again usually a standard normal).
 
 
-##### (Why is this called _variational_ autoencoding?)
+##### Why do we do this? (And why is this called _variational_ autoencoding?)
 
-_Variational_ inference is when we have a distribution ($p(X)$) that we are interested in, but it is difficult to calculate the posterior or sample from. We can instead pick a distribution that is easy to handle ($q(X, \theta)$), with it's own set of _variational_ parameters $\theta$, and find the parameters which let us match the original. 
+Remember that we are interested in $P(X)$. In a latent variable model, we could calculate this as $P(X) = \int P(X|z)p(z)$. Unfortunately, this is difficult to learn directly.
+
+_Variational_ inference is when we have a distribution ($p$) that we are interested in, but it is difficult to calculate the posterior or sample from. We can instead pick a distribution that is easy to handle ($q(X, \theta)$), with it's own set of _variational_ parameters $\theta$, and find the parameters which let us match the original. 
 
 In a VAE, we have a distribution of the latent variable, $p(z)$, which we usually assume to be a Gaussian (for a few different reasons, it's easy to work with and has some nice iterpolation properties). However, the distribution of the latent variable for a given input, $p(z|X)$, could be anything and is very difficult to calculate. We instead perform _variational inference_ by estimating $p(z|X)$ as $q(z|X)$, which we also estimate as a unit Gaussian. This means we have to optimize how closely $q$ estimates $p$, hence the variational loss!
 """
