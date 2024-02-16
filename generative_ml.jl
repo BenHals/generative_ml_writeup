@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.37
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -16,7 +16,7 @@ end
 
 # ╔═╡ 53d5a647-2e4d-4306-b5b9-e6cda92d3c9f
 # ╠═╡ show_logs = false
-using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions
+using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions, Random
 
 # ╔═╡ 501a7c75-b34b-4120-958e-a555fc2c781f
 @sk_import linear_model: LogisticRegression
@@ -645,7 +645,174 @@ From $\bar{z}$, we reconstruct the original sample using the decoder $p(x|z)$. T
 # ╔═╡ bd3953e5-c712-4f76-812b-5880434708e4
 md"""
 ### Diffusion Model
+
+Diffusion models are somewhat similar to VAE's in that the general idea is we _encode_ an input $x$ into a latent variable $z$ with a nice distribution (again, $z \sim q(z) \sim N(0, 1)$), then _decode_ $z$ into a reconstructed input $\hat{x}$ which we use to compute loss.
+
+We even use a loss term based on the same mathmatical construct, ELBO.
+
+The main difference is how the encoder works. In a VAE, the encoder was a model with it's own parameters and during the training process these parameters were updated to push the encoder towards generating a nice distribution of latent features. In a diffusion model, we use a prespecified encoder without any parameters.
+
+#### Encoder
+
+The main idea behind the encoder is that we take the inital observation $x$ and iteratively mix it with gaussian noise. After enough steps of this, we have lost the original signal and only have the gaussian noise which is distributed as $N(0, 1)$.
+
+Starting with the observation $x$, we have:
+
+$z_1 = \sqrt{1 - \beta}\times x + \sqrt{\beta} \times \epsilon_1$
+
+$z_t = \sqrt{1 - \beta}\times z_{t-1} + \sqrt{\beta} \times \epsilon_t$
+
+Here, $\beta$ controls how fast the error $\epsilon$ is mixed into the data.
+
+This means that:
+
+$q(z_1|x) = Norm(\sqrt{1-\beta_1}x, \beta)$
+$q(z_t|z_{t-1}) = Norm(\sqrt{1-\beta_1}z_{t-1}, \beta)$
+
+Eventually after enough timesteps $q(z_t|x) = q(z) = N(0, 1)$.
 """
+
+# ╔═╡ b1e96fa0-a3c5-4868-9f0a-c380aa50725c
+@bind diff_1d_sample Button("Diffuse")
+
+# ╔═╡ af05d92e-894d-4f83-b869-507c4b1907f6
+begin
+	diff_1d_sample
+	diffusion_1d_x = MixtureModel([Normal(rand()*2 - 1, 0.1), Normal(rand()*2 - 1, 0.05)])
+	plot(LinRange(-1, 1, 1000), pdf(diffusion_1d_x, LinRange(-1, 1, 1000)), title="Distribution of X")
+end
+
+# ╔═╡ d03210b5-2b60-4e3c-bdb5-23879277254c
+begin
+	diffusion_1d_beta = 0.03
+	samples_x = []
+	samples_y = []
+	diffused_x = repeat([rand(diffusion_1d_x)], 1000)
+	push!(samples_x, diffused_x)
+	push!(samples_y, ones(length(diffused_x)) .* 0)
+	
+	for t in 1:100
+		e = randn(length(diffused_x))
+		diffused_x = diffused_x .* sqrt(1-diffusion_1d_beta) .+ sqrt(diffusion_1d_beta) .* e
+		push!(samples_x, diffused_x)
+		push!(samples_y, ones(length(diffused_x)) .* t)
+	end
+	x_mat = mapreduce(permutedims, vcat, samples_x)
+	y_mat = mapreduce(permutedims, vcat, samples_y)
+	# scatter(vcat(samples_x...), vcat(samples_y...))
+	p = plot(x_mat[:, 1], y_mat[:, 1], xlim=[-3, 3], label=false, color="blue", alpha=0.1)
+	for i in 2:size(x_mat)[2]
+		plot!(x_mat[:, i], y_mat[:, i], label=false, color="blue", alpha=0.1)
+	end
+	p
+end
+
+# ╔═╡ 15903f6f-4103-4192-a244-26a36c47f5cb
+histogram(samples_x[length(samples_x)])
+
+# ╔═╡ 8f318a85-500c-42fc-90b8-99624e19b648
+md"""
+With this setup, we can actually derive a closed form expression for $q(z_t|x)$ as $N(\sqrt{\prod_t(1-\beta)}\times x, \prod_t \beta)$
+"""
+
+# ╔═╡ e99c52fd-bb4d-40b1-b959-b2fe6cdd76d6
+md"""
+Now that we have a nice normally distributed latent variable $z_t$, we need to learn the decoder to get back a sample in the original space.
+
+The idea is that for each timestep, we train a model to learn $q(z_{t-1}|z_{t})$. Unfortunately this is intractable, and depends on the initial distribution of data which we don't know.
+
+Instead, we approximate using a set of learned approximations $p$. (Note: this notation is from the sources I've looked at, but it's a little confusion since usually $p$ is the true distribution and $q$ is the approximation. Here it's the opposite.)
+
+We set:
+$P(z_{t-1}|z_t, \theta_t) = N(f_t(z_t, \theta_t), \sigma)$
+
+where $f_t(z_t, \theta_t)$ is a value predicted by a model. Essentially, we train models to, at each timestep, predict the mean of the previous distribution.
+
+To train, we want to _maximize the likelihood of generating the training observations given the sequence of parameters $\theta$_. Unfortunately we can't directly calculate the likelihood of a given x given a set of parameters, because the required integral does not have an easy to calculate formula.
+
+Instead we optimize a lower bound on this posterior probability called the ELBO (Evidence Lower BOund).
+
+Essentially optimizing the EBLO simplifies to training each model to minimize the difference between the mean of $q(z_{t-1}|x)$ given an observation $x$, and what the model predicts for $z_{t-1}$ given $z_t$. To get the real values for these, we just calculate them using the forward diffusion process.
+"""
+
+# ╔═╡ f1ce89ff-47ed-4808-a88f-6baa0f8b3ad0
+begin
+	function make_spiral(rng::AbstractRNG, n_samples::Int=1000)
+	    t_min = 1.5π
+	    t_max = 4.5π
+	
+	    t = rand(rng, n_samples) * (t_max - t_min) .+ t_min
+	
+	    x = t .* cos.(t)
+	    y = t .* sin.(t)
+	
+	    permutedims([x y], (2, 1))
+	end
+	make_spiral(n_samples::Int=1000) = make_spiral(Random.GLOBAL_RNG, n_samples)
+
+	function normalize_zero_to_one(x)
+	    x_min, x_max = extrema(x)
+	    x_norm = (x .- x_min) ./ (x_max - x_min)
+	    x_norm
+	end
+	
+	function normalize_neg_one_to_one(x)
+	    2 * normalize_zero_to_one(x) .- 1
+	end
+
+	function linear_beta_schedule(num_timesteps::Int, β_start=0.0001f0, β_end=0.02f0)
+	    scale = convert(typeof(β_start), 1000 / num_timesteps)
+	    β_start *= scale
+	    β_end *= scale
+	    range(β_start, β_end; length=num_timesteps)
+	end
+end;
+
+# ╔═╡ ce8ef6ab-dc42-42db-8a08-191a221ada15
+begin
+	diff_spiral_n_samples = 1000
+	diff_spiral_X = normalize_neg_one_to_one(make_spiral(diff_spiral_n_samples))
+	scatter(diff_spiral_X[1, :], diff_spiral_X[2, :], 
+	    alpha=0.5,
+	    aspectratio=:equal,
+	    )
+end
+
+# ╔═╡ 53157f04-5c5c-4ec3-9b9a-fa5719136486
+begin
+	num_timesteps = 40
+	βs = linear_beta_schedule(num_timesteps, 8e-6, 9e-5)
+end
+
+# ╔═╡ c64188a9-8630-4119-9a48-0b60de93d4f4
+@bind diff_spiral_t Slider(1:40)
+
+# ╔═╡ 944d7251-06df-4fc1-9b0d-aab5b0ab6510
+begin
+	diff_spiral_frames = []
+	diff_spiral_vals = copy(diff_spiral_X)
+	push!(diff_spiral_frames, diff_spiral_vals)
+	for t in 1:40
+		mu = diff_spiral_vals .* sqrt(1 - βs[t])
+		noise = randn((2, size(diff_spiral_vals, 2)))
+		sigma = sqrt(βs[t])
+		diff_spiral_vals = mu + sigma .* noise
+		push!(diff_spiral_frames, diff_spiral_vals)
+	end
+end
+
+# ╔═╡ 3da6db2d-fe32-4b92-8875-eb39e1162745
+begin
+	scatter(
+		diff_spiral_frames[diff_spiral_t][1, :],
+		diff_spiral_frames[diff_spiral_t][2, :],
+		xlim=(-2, 2),
+		ylim=(-2, 2)
+	)
+end
+
+# ╔═╡ e8504109-ae23-47a3-a960-3c85e4bcc31e
+diff_spiral_frames
 
 # ╔═╡ f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 md"""
@@ -662,6 +829,7 @@ KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ScikitLearn = "3646fa90-6ef7-5e7e-9f22-8aca16db6324"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
@@ -683,7 +851,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "508567f676c5fd528f087fe30cf10e135d14dd0e"
+project_hash = "c48cc9d353a567633da25e64593ff13861a32b1a"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -3085,10 +3253,23 @@ version = "1.4.1+1"
 # ╟─00bb5276-fac1-4e88-8263-c2827c0205b0
 # ╟─b5547fb9-de04-40ab-a0d6-adcc74c58f35
 # ╟─0ddb4051-0b46-4630-9830-191f946fef4e
-# ╠═551bd357-0866-424f-9908-0fec38a665ef
+# ╟─551bd357-0866-424f-9908-0fec38a665ef
 # ╟─50737e6b-2cf9-4349-bddb-972da5ee44f3
 # ╟─9523db99-d329-4faf-95cf-bf8c95e6d643
-# ╠═bd3953e5-c712-4f76-812b-5880434708e4
+# ╟─bd3953e5-c712-4f76-812b-5880434708e4
+# ╟─b1e96fa0-a3c5-4868-9f0a-c380aa50725c
+# ╟─af05d92e-894d-4f83-b869-507c4b1907f6
+# ╟─d03210b5-2b60-4e3c-bdb5-23879277254c
+# ╟─15903f6f-4103-4192-a244-26a36c47f5cb
+# ╠═8f318a85-500c-42fc-90b8-99624e19b648
+# ╟─e99c52fd-bb4d-40b1-b959-b2fe6cdd76d6
+# ╟─f1ce89ff-47ed-4808-a88f-6baa0f8b3ad0
+# ╠═ce8ef6ab-dc42-42db-8a08-191a221ada15
+# ╠═53157f04-5c5c-4ec3-9b9a-fa5719136486
+# ╟─c64188a9-8630-4119-9a48-0b60de93d4f4
+# ╟─944d7251-06df-4fc1-9b0d-aab5b0ab6510
+# ╟─3da6db2d-fe32-4b92-8875-eb39e1162745
+# ╠═e8504109-ae23-47a3-a960-3c85e4bcc31e
 # ╠═f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
