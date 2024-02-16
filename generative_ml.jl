@@ -650,6 +650,16 @@ md"""
 # ╔═╡ f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 md"""
 ### Score Matching
+
+Score matching is a method of representing the distribution of a data generating process by learning its _gradient_. This gradient is also known as a _score function_.
+
+###### Why would we learn the gradient rather than the function directly?
+
+Remember that the hard part of learning a distribution is the normalizing constant, the part that keeps the probability summing to 1. However, the gradient of a function dosen't need this normalization, so we can skip the difficult part of the calculation.
+
+The tricky part is how we learn the gradient in the first place. While we can build a training set of $x$ observations to learn $p(X)$, we don't have any direct observations of the gradient of $p(x)$ at these points. We can use a technique called _score matching_ to learn this objective without needing the gradient. The basic idea is that $p(X)$ should have local maxima around the observations in the training set, so the gradient should be 0.
+
+#### Score matching Objective
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
