@@ -16,7 +16,7 @@ end
 
 # ╔═╡ 53d5a647-2e4d-4306-b5b9-e6cda92d3c9f
 # ╠═╡ show_logs = false
-using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions, Random
+using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions, Random, Impute
 
 # ╔═╡ 501a7c75-b34b-4120-958e-a555fc2c781f
 @sk_import linear_model: LogisticRegression
@@ -699,7 +699,6 @@ begin
 	end
 	x_mat = mapreduce(permutedims, vcat, samples_x)
 	y_mat = mapreduce(permutedims, vcat, samples_y)
-	# scatter(vcat(samples_x...), vcat(samples_y...))
 	p = plot(x_mat[:, 1], y_mat[:, 1], xlim=[-3, 3], label=false, color="blue", alpha=0.1)
 	for i in 2:size(x_mat)[2]
 		plot!(x_mat[:, i], y_mat[:, i], label=false, color="blue", alpha=0.1)
@@ -792,7 +791,7 @@ begin
 	diff_spiral_frames = []
 	diff_spiral_vals = copy(diff_spiral_X)
 	push!(diff_spiral_frames, diff_spiral_vals)
-	for t in 1:40
+	for t in 1:num_timesteps
 		mu = diff_spiral_vals .* sqrt(1 - βs[t])
 		noise = randn((2, size(diff_spiral_vals, 2)))
 		sigma = sqrt(βs[t])
@@ -812,7 +811,126 @@ begin
 end
 
 # ╔═╡ e8504109-ae23-47a3-a960-3c85e4bcc31e
-diff_spiral_frames
+begin
+	diffusion_1d_beta_learn = 0.005
+	samples_x_learn = []
+	diffused_x_learn = rand(diffusion_1d_x, 1000000)
+	push!(samples_x_learn, diffused_x_learn)
+	
+	
+	for t in 1:100
+		e = randn(length(diffused_x_learn))
+		diffused_x_learn = diffused_x_learn .* sqrt(1-diffusion_1d_beta_learn) .+ sqrt(diffusion_1d_beta_learn) .* e
+		push!(samples_x_learn, diffused_x_learn)
+	end
+	x_mat_learn = reduce(hcat, samples_x_learn)
+	# p_learn = plot(x_mat_learn[1, :], 1:101, xlim=[-3, 3], label=false, color="blue", alpha=0.1)
+	# for i in 2:size(x_mat_learn)[1]
+	# 	plot!(x_mat_learn[i, :], 1:101, label=false, color="blue", alpha=0.1)
+	# end
+	# p_learn
+end;
+
+# ╔═╡ 5e308af3-9ad3-4035-a117-d56ff966dd41
+begin
+	function to_bin(bin_edges, val)
+		return searchsortedfirst(bin_edges[2:length(bin_edges)-1], val)
+	end
+
+	function from_bin(bin_edges, binned_val)
+		bin_idx = Int(floor(binned_val))
+		return (bin_edges[bin_idx] + bin_edges[bin_idx + 1]) / 2
+	end
+	
+	function bin_data(d::AbstractVector, bin_edges::AbstractVector)::AbstractVector
+		bin_counts = zeros(length(bin_edges))
+		for val in d
+			idx = to_bin(bin_edges, val)
+			bin_counts[idx] += 1
+		end
+		return bin_counts
+	end
+
+
+end;
+
+# ╔═╡ 26281e22-763e-4cfd-bf30-8a691621ad75
+begin
+	bin_edges = LinRange(-3, 3, 10000)
+	binned_x_mat_learn = reduce(hcat, [bin_data(xd, bin_edges) for xd in samples_x_learn])
+	l = @layout [a; b; c]
+	p3 = bar(bin_edges, binned_x_mat_learn[:, 1], showaxis=false, legend=false)
+	p2 = heatmap(binned_x_mat_learn', showaxis=false, legend=false)
+	p1 = bar(bin_edges, binned_x_mat_learn[:, 100], showaxis=false, legend=false)
+	plot(p1, p2, p3, layout=l, size=(1000, 2000))
+end
+
+# ╔═╡ 1c363e40-9b4c-43e3-b57f-dff934f25a1e
+begin
+	discrete_diffusion = map(v -> (to_bin(bin_edges, v)), x_mat_learn)
+	diffusion_t_models = []
+	for t in 2:size(discrete_diffusion)[2]
+		timestep_layer = discrete_diffusion[:, t]
+		prev_timestep_layer = discrete_diffusion[:, t-1]
+		bin_prevs = []
+		for i in 1:length(bin_edges)
+			push!(bin_prevs, [])
+		end
+		for i in 1:length(timestep_layer)
+			push!(bin_prevs[timestep_layer[i]], prev_timestep_layer[i])
+		end
+		push!(diffusion_t_models, Impute.interp([length(prevs) > 0 ? mean(prevs) : missing for prevs in bin_prevs]) |> Impute.locf() |> Impute.nocb())
+	end
+end
+
+# ╔═╡ 48a3cb0c-4043-4680-8ae0-aad63621b8b9
+begin
+	function reverse_diffusion(val, diffusion_models, bin_edges)
+		path::Vector{Float64} = [val]
+		current_val = to_bin(bin_edges, val)
+		for t in length(diffusion_models):-1:1
+			next_mean = diffusion_models[t][current_val]
+			push!(path, from_bin(bin_edges, next_mean))
+			# push!(path, next_mean)
+			current_val = Int(floor(next_mean))
+		end
+		return path
+	end
+end;
+
+# ╔═╡ 5939d4bb-fe43-41d3-aaac-22a8722dbb2e
+begin
+	reverse_diffusion_mat = reduce(hcat, [reverse_diffusion(randn() * 1, diffusion_t_models, bin_edges) for i in 1:5000])'
+	_p = plot(reverse_diffusion_mat[1, :], 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
+	for i in 1:1000
+		plot!(reverse_diffusion(randn() * 3, diffusion_t_models, bin_edges), 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
+	end
+	_p3 = plot(histogram(reverse_diffusion_mat[:, 1], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
+	_p1 = plot(histogram(reverse_diffusion_mat[:, size(reverse_diffusion_mat)[2]], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
+	plot(_p3, _p, _p1, layout=l, size=(1000, 2000))
+end
+
+# ╔═╡ bfd7f3db-63cb-42bb-99f7-463257dc86ff
+@bind rev_diffusion_1d_t Slider(1:5:99)
+
+# ╔═╡ b8bfbe72-ba75-4960-a314-fbc05a972f91
+@bind rev_diffusion_1d_resample Button("Resample")
+
+# ╔═╡ cf122175-71c8-49e0-9375-84cbab13814c
+begin
+	rev_diffusion_1d_resample
+	rev_diffusion_1d_start = randn()
+	path = reverse_diffusion(rev_diffusion_1d_start, diffusion_t_models, bin_edges)
+end;
+
+# ╔═╡ ea9daae8-c000-4d65-b64a-772fabd4694d
+begin
+	xs = path[1:rev_diffusion_1d_t]
+	plot(xs, 100:-1:101-length(xs), xlim=(-3, 3), ylim=(0, 100))
+end
+
+# ╔═╡ 85edb406-9584-418b-a86c-f68b6b82ca3d
+length(xs)
 
 # ╔═╡ f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 md"""
@@ -825,6 +943,7 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+Impute = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
 KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -837,6 +956,7 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Colors = "~0.12.10"
 Distributions = "~0.25.107"
 Images = "~0.26.0"
+Impute = "~0.6.11"
 KernelDensity = "~0.6.8"
 MLDatasets = "~0.7.14"
 Plots = "~1.40.0"
@@ -851,7 +971,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "c48cc9d353a567633da25e64593ff13861a32b1a"
+project_hash = "4f3cd6bd53f1978864a95b5387a1c938f821b046"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -961,6 +1081,11 @@ deps = ["LinearAlgebra", "Printf", "Random", "Test"]
 git-tree-sha1 = "dbf84058d0a8cbbadee18d25cf606934b22d7c66"
 uuid = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"
 version = "0.4.2"
+
+[[deps.BSON]]
+git-tree-sha1 = "4c3e506685c527ac6a54ccc0c8c76fd6f91b42fb"
+uuid = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+version = "0.3.9"
 
 [[deps.BangBang]]
 deps = ["Compat", "ConstructionBase", "InitialValues", "LinearAlgebra", "Requires", "Setfield", "Tables"]
@@ -1185,6 +1310,12 @@ deps = ["LinearAlgebra", "StaticArrays"]
 git-tree-sha1 = "f9d7112bfff8a19a3a4ea4e03a8e6a91fe8456bf"
 uuid = "150eb455-5306-5404-9cee-2592286d6298"
 version = "0.6.3"
+
+[[deps.CovarianceEstimation]]
+deps = ["LinearAlgebra", "Statistics", "StatsBase"]
+git-tree-sha1 = "9a44ddc9e60ee398934b73a5168f5806989e6792"
+uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
+version = "0.2.11"
 
 [[deps.CpuId]]
 deps = ["Markdown"]
@@ -1668,6 +1799,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "3d09a9f60edf77f8a4d99f9e015e8fbf9989605d"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
 version = "3.1.7+0"
+
+[[deps.Impute]]
+deps = ["BSON", "CSV", "DataDeps", "Distances", "IterTools", "LinearAlgebra", "Missings", "NamedDims", "NearestNeighbors", "Random", "Statistics", "StatsBase", "TableOperations", "Tables"]
+git-tree-sha1 = "27da3d215f3ac8bd5dc2b0bb144b4a4367652462"
+uuid = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
+version = "0.6.11"
 
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
@@ -2161,6 +2298,12 @@ deps = ["PrettyPrint"]
 git-tree-sha1 = "1a0fa0e9613f46c9b8c11eee38ebb4f590013c5e"
 uuid = "71a1bf82-56d0-4bbc-8a3c-48b961074391"
 version = "0.1.5"
+
+[[deps.NamedDims]]
+deps = ["AbstractFFTs", "ChainRulesCore", "CovarianceEstimation", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
+git-tree-sha1 = "dc9144f80a79b302b48c282ad29b1dc2f10a9792"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "1.2.1"
 
 [[deps.NearestNeighbors]]
 deps = ["Distances", "StaticArrays"]
@@ -3259,17 +3402,27 @@ version = "1.4.1+1"
 # ╟─bd3953e5-c712-4f76-812b-5880434708e4
 # ╟─b1e96fa0-a3c5-4868-9f0a-c380aa50725c
 # ╟─af05d92e-894d-4f83-b869-507c4b1907f6
-# ╟─d03210b5-2b60-4e3c-bdb5-23879277254c
+# ╠═d03210b5-2b60-4e3c-bdb5-23879277254c
 # ╟─15903f6f-4103-4192-a244-26a36c47f5cb
 # ╠═8f318a85-500c-42fc-90b8-99624e19b648
 # ╟─e99c52fd-bb4d-40b1-b959-b2fe6cdd76d6
 # ╟─f1ce89ff-47ed-4808-a88f-6baa0f8b3ad0
-# ╠═ce8ef6ab-dc42-42db-8a08-191a221ada15
-# ╠═53157f04-5c5c-4ec3-9b9a-fa5719136486
+# ╟─ce8ef6ab-dc42-42db-8a08-191a221ada15
+# ╟─53157f04-5c5c-4ec3-9b9a-fa5719136486
 # ╟─c64188a9-8630-4119-9a48-0b60de93d4f4
 # ╟─944d7251-06df-4fc1-9b0d-aab5b0ab6510
 # ╟─3da6db2d-fe32-4b92-8875-eb39e1162745
-# ╠═e8504109-ae23-47a3-a960-3c85e4bcc31e
+# ╟─e8504109-ae23-47a3-a960-3c85e4bcc31e
+# ╟─5e308af3-9ad3-4035-a117-d56ff966dd41
+# ╟─26281e22-763e-4cfd-bf30-8a691621ad75
+# ╟─1c363e40-9b4c-43e3-b57f-dff934f25a1e
+# ╟─48a3cb0c-4043-4680-8ae0-aad63621b8b9
+# ╠═5939d4bb-fe43-41d3-aaac-22a8722dbb2e
+# ╟─bfd7f3db-63cb-42bb-99f7-463257dc86ff
+# ╟─b8bfbe72-ba75-4960-a314-fbc05a972f91
+# ╟─cf122175-71c8-49e0-9375-84cbab13814c
+# ╟─ea9daae8-c000-4d65-b64a-772fabd4694d
+# ╠═85edb406-9584-418b-a86c-f68b6b82ca3d
 # ╠═f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
