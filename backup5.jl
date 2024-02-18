@@ -6,24 +6,20 @@ using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-        quote
-                local iv = try
-                        Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value
-                catch
-                        b -> missing
-                end
-                local el = $(esc(element))
-                global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-                el
-        end
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
 end
 
 # ╔═╡ 53d5a647-2e4d-4306-b5b9-e6cda92d3c9f
 # ╠═╡ show_logs = false
-using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions, Flux, Random, Impute
+using Images, Plots, Colors, PlutoUI, MLDatasets, ScikitLearn, KernelDensity, StatsPlots, Distributions, Random, Impute
 
 # ╔═╡ 501a7c75-b34b-4120-958e-a555fc2c781f
-@sk_import linear_model:LogisticRegression
+@sk_import linear_model: LogisticRegression
 
 # ╔═╡ 1b961b0e-c31c-11ee-032f-81f83adfecc6
 md"""
@@ -48,38 +44,38 @@ $(@bind dg1_reset Button("Reset"))
 
 # ╔═╡ c5910217-b817-4c16-990a-b416a061a205
 begin
-        dg1_reset
-        collar_pitch = []
-        sample_space_pitch = []
+	dg1_reset;
+	collar_pitch = []
+	sample_space_pitch = []
 end;
 
 # ╔═╡ c247e228-72b0-4f3c-b053-e5bfa1995fb9
 begin
-        dg1_sample
-        push!(collar_pitch, rand() * 180 - 90)
-        sample_str = join(round.(collar_pitch .* 100) ./ 100, ", ")
+	dg1_sample
+	push!(collar_pitch, rand() * 180 - 90)
+	sample_str = join(round.(collar_pitch .* 100) ./ 100, ", ")
 
-        md"""
-        Collar pitch = [$(sample_str)]
-        """
+	md"""
+	Collar pitch = [$(sample_str)]
+	"""
 end
 
 # ╔═╡ 4cd34511-a24f-438c-b9e5-af45ba54177f
 function get_paddock_apc(n)
-        img = colorview(RGB, zeroarray, max.(rand(n, n), 0.5), zeroarray)
+	img = colorview(RGB, zeroarray, max.(rand(n, n), 0.5), zeroarray)
 end;
 
 # ╔═╡ ec9bef40-ee9d-4378-be1b-fccb1a6b1a39
 begin
-        dg1_reset
-        paddock_samples = []
-        sample_space_samples = []
+	dg1_reset
+	paddock_samples = []
+	sample_space_samples = []
 end;
 
 # ╔═╡ c8fd072f-0d59-4e6b-bccc-b73eb731598f
 begin
-        dg1_sample
-        push!(paddock_samples, get_paddock_apc(8))
+	dg1_sample
+	push!(paddock_samples, get_paddock_apc(8))
 end
 
 # ╔═╡ ccba3a27-47d8-4d44-b244-e80e49128330
@@ -100,19 +96,19 @@ However, we might notice that not every outcome in the sample space is equally a
 
 # ╔═╡ 1420181f-d95a-40f5-bac1-b02ba469e93d
 begin
-        dg1_sample
-        push!(sample_space_pitch, rand() * 100000 - 50000)
-        sample_space_str = join(round.(sample_space_pitch .* 100) ./ 100, ", ")
+	dg1_sample
+	push!(sample_space_pitch, rand() * 100000 - 50000)
+	sample_space_str = join(round.(sample_space_pitch .* 100) ./ 100, ", ")
 
-        md"""
-        Collar pitch sample space = [$(sample_space_str)]
-        """
+	md"""
+	Collar pitch sample space = [$(sample_space_str)]
+	"""
 end
 
 # ╔═╡ 9e5b7f44-52d9-487f-89ba-b66b2e8a3fbe
 begin
-        dg1_sample
-        push!(sample_space_samples, rand(RGB, 8, 8))
+	dg1_sample
+	push!(sample_space_samples, rand(RGB, 8, 8))
 end
 
 # ╔═╡ 174b198a-b84a-416f-aae8-7f2adc1bc74f
@@ -147,18 +143,18 @@ Generative AI has been building a lot of hype for generating images or text. App
 
 # ╔═╡ 720f2369-de64-4b21-9b60-dce64144c3b3
 begin
-        do_sample
-        mnist_img = convert2image(MNIST(split=:test), round(Int, rand() * 10000))
-        rand_sample_img = rand(Gray, 28, 28)
-        md"""
-        Generative ML sample
+	do_sample
+	mnist_img = convert2image(MNIST(split=:test), round(Int, rand() * 10000))
+	rand_sample_img = rand(Gray, 28, 28)
+	md"""
+	Generative ML sample
+	
+	$(mnist_img)
 
-        $(mnist_img)
-
-        Random Sample from sample space
-
-        $(rand_sample_img)
-        """
+	Random Sample from sample space
+	
+	$(rand_sample_img)
+	"""
 end
 
 # ╔═╡ b06536b2-2625-4d5c-8179-153de3b94763
@@ -192,19 +188,19 @@ For example, we could consider a data generating process which produces samples 
 # ╔═╡ 10c37474-2034-4184-9b7e-32dc4d8c764c
 # ╠═╡ show_logs = false
 begin
-        resample_discrim_example
-        healthy_dml_sample = randn(1000, 1) .* 40 .+ 200
-        sick_dml_sample = randn(1000, 1) .* 20 .+ 100
-        X = [healthy_dml_sample; sick_dml_sample]
-        y = [zeros(1000, 1); zeros(1000, 1) .+ 1]
-        scatter(healthy_dml_sample, label="Healthy", ylabel="Accel")
-        scatter!(sick_dml_sample, label="Sick", xlabel="Sample")
-        model = LogisticRegression(fit_intercept=true, max_iter=200)
-        fit!(model, X, reshape(y, :, 1))
-        o = predict_proba(model, reshape(LinRange(0, 500, 500), :, 1))
-        decision_boundary = findfirst(x -> x > 0.5, o[:, 1])
-        # decision_boundary
-        hline!([decision_boundary], color="red", lw=5, label="Decision Boundary")
+	resample_discrim_example
+	healthy_dml_sample = randn(1000, 1) .* 40 .+ 200
+	sick_dml_sample = randn(1000, 1) .* 20 .+ 100
+	X = [healthy_dml_sample; sick_dml_sample]
+	y = [zeros(1000, 1); zeros(1000, 1) .+ 1]
+	scatter(healthy_dml_sample, label="Healthy", ylabel="Accel")
+	scatter!(sick_dml_sample, label="Sick", xlabel="Sample")
+	model = LogisticRegression(fit_intercept=true, max_iter = 200)
+	fit!(model, X, reshape(y, :, 1))
+	o = predict_proba(model, reshape(LinRange(0, 500, 500), :, 1))
+	decision_boundary = findfirst(x -> x > 0.5, o[:, 1])
+	# decision_boundary
+	hline!([decision_boundary], color="red", lw=5, label="Decision Boundary")
 end
 
 # ╔═╡ 05da7050-25a8-4cc7-9ddd-e01cee9ad588
@@ -214,16 +210,16 @@ In a discriminative view of the problem, we learn the decision boundary between 
 
 # ╔═╡ 778386b3-9e79-44fa-8948-be58dbdc32d5
 begin
-        jittered_y = y .+ randn(2000) .* 0.1
-
-        k = kde((reshape(X, :), reshape(jittered_y, :)))
-
-        contour(k)
-        scatter!(X[1:1000], jittered_y[1:1000], ylabel="Sick or not", xlabel="Accel", alpha=0.1, color="Blue", label="Healthy")
-        scatter!(X[1000:2000], jittered_y[1000:2000], ylabel="Sick or not", xlabel="Accel", alpha=0.1, color="Orange", label="Sick")
-        quiver!([300], [1.0], quiver=([-100], [0.0]))
-        scatter!([200], [1.0])
-        annotate!(300, 0.75, "Sick or Healthy?")
+	jittered_y = y .+ randn(2000) .* 0.1
+	
+	k = kde((reshape(X, :), reshape(jittered_y, :)))
+	
+	contour(k)
+	scatter!(X[1:1000], jittered_y[1:1000], ylabel="Sick or not", xlabel="Accel", alpha=0.1, color="Blue", label="Healthy")
+	scatter!(X[1000:2000], jittered_y[1000:2000], ylabel="Sick or not", xlabel="Accel", alpha=0.1, color="Orange", label="Sick")
+	quiver!([300], [1.0], quiver=([-100], [0.0]))
+	scatter!([200], [1.0])
+	annotate!(300, 0.75, "Sick or Healthy?")
 
 end
 
@@ -268,28 +264,28 @@ The key observation is that if the model assigns a high probability to the obser
 
 # ╔═╡ d4881b29-41bb-49b3-9805-26df3a60f54a
 begin
-        why_hard_n_samples_ui = @bind why_hard_n_samples Slider(2:100)
-        why_hard_reset_ui = @bind why_hard_reset Button("Reset")
+	why_hard_n_samples_ui = @bind why_hard_n_samples Slider(2:100)
+	why_hard_reset_ui = @bind why_hard_reset Button("Reset")
 
-        md"""
-        $(why_hard_n_samples_ui)
-        $(why_hard_reset_ui)
-        """
+	md"""
+	$(why_hard_n_samples_ui)
+	$(why_hard_reset_ui)
+	"""
 end
 
 # ╔═╡ 229f2cd8-9a7d-40ee-893c-bae17af8848e
 begin
-        why_hard_reset
-        mu = rand(25:100)
-        sigma = rand(1:25)
-        samples = randn(1000) .* sigma .+ mu
+	why_hard_reset
+	mu = rand(25:100)
+	sigma = rand(1:25)
+	samples = randn(1000) .* sigma .+ mu
 end;
 
 # ╔═╡ eeea55ab-b6fa-4f0c-9954-e719b37d8340
 begin
-        scatter(samples[1:why_hard_n_samples], zeros(why_hard_n_samples), xlim=(0, 200), xlabel="X", ylabel="P(X)")
-        plot!(Normal(mean(samples[1:why_hard_n_samples]), std(samples[1:why_hard_n_samples])), lw=3)
-
+	scatter(samples[1:why_hard_n_samples], zeros(why_hard_n_samples), xlim=(0, 200), xlabel="X", ylabel="P(X)")
+	plot!(Normal(mean(samples[1:why_hard_n_samples]), std(samples[1:why_hard_n_samples])), lw=3)
+	
 end
 
 # ╔═╡ c4f67a98-6d25-4c4b-9978-fa3dc4f1a59e
@@ -311,8 +307,8 @@ _No._ Unfortunately, the normalization is vitally important. If we just tried to
 
 # ╔═╡ c480d622-02a0-495c-b1e1-a86f198524c1
 begin
-        scatter(samples[1:why_hard_n_samples], zeros(why_hard_n_samples), xlim=(0, 200), xlabel="X", ylabel="P(X)", title="Maximize observed likelihood without normalization")
-        plot!([0, 200], [1.0, 1.0], lw=3)
+	scatter(samples[1:why_hard_n_samples], zeros(why_hard_n_samples), xlim=(0, 200), xlabel="X", ylabel="P(X)", title="Maximize observed likelihood without normalization")
+	plot!([0, 200], [1.0, 1.0], lw=3)
 end
 
 # ╔═╡ 9d880683-a78a-4e78-9ccb-6de660e9399a
@@ -339,11 +335,11 @@ One gaussian may not fit the data well. For example, collar pitch shows up as a 
 
 # ╔═╡ 3c8e65c5-2e9d-49d9-809d-4652dc7c9751
 begin
-        pitch_samples = [randn(500) .* 20 .- 45; randn(500) .* 40 .+ 120]
-        scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
-        histogram!(pitch_samples, bins=100, normalize=true)
-        x = LinRange(-150, 250, 1000)
-        plot!(x, pdf(Normal(mean(pitch_samples), std(pitch_samples)), x), lw=5)
+	pitch_samples = [randn(500) .* 20 .- 45; randn(500) .* 40 .+ 120]
+	scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
+	histogram!(pitch_samples, bins=100, normalize=true)
+	x = LinRange(-150, 250, 1000)
+	plot!(x, pdf(Normal(mean(pitch_samples), std(pitch_samples)), x), lw=5)
 end
 
 # ╔═╡ 7c4f4c9d-fc79-4107-aa02-027a63b3c77c
@@ -357,9 +353,9 @@ Here we use two Gaussian distributions to accurately model the overall distribut
 
 # ╔═╡ 17c2e0fc-fed1-4bb5-b718-3fe44356aec5
 begin
-        scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
-        histogram!(pitch_samples, bins=100, normalize=true)
-        plot!(x, pdf(MixtureModel([Normal(-45, 20), Normal(120, 40)]), x), lw=5)
+	scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
+	histogram!(pitch_samples, bins=100, normalize=true)
+	plot!(x, pdf(MixtureModel([Normal(-45, 20), Normal(120, 40)]), x), lw=5)
 end
 
 # ╔═╡ 66095f09-82e1-44f8-a1ea-15747ebe566e
@@ -372,11 +368,11 @@ Kernel density estimation is another similar method. We essentially place a smal
 
 # ╔═╡ 3e2d1eb6-7e9c-47cd-a173-f981801b0729
 begin
-        scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
-        histogram!(pitch_samples, bins=100, normalize=true)
-        div = 1
-        n_samples = length(pitch_samples) / div
-        plot!(x, pdf(MixtureModel(map(u -> Normal(u, kde_smoothing * std(pitch_samples) / n_samples), pitch_samples[1:div:length(pitch_samples)])), x), lw=5)
+		scatter(pitch_samples, zeros(length(pitch_samples)) .- 0.001, ylim=(-0.0011, 0.015))
+		histogram!(pitch_samples, bins=100, normalize=true)
+		div = 1
+		n_samples = length(pitch_samples) / div
+		plot!(x, pdf(MixtureModel(map(u -> Normal(u, kde_smoothing* std(pitch_samples) / n_samples), pitch_samples[1:div:length(pitch_samples)])), x), lw=5)
 end
 
 # ╔═╡ 79158f73-e221-476d-95d7-8fd2631e8124
@@ -401,52 +397,52 @@ The key idea is that the adversarial network only has to be a discriminative cla
 
 # ╔═╡ c52e8df9-5b21-4f0a-be51-093a7a56d1a5
 begin
-        GAN_sample_data = randn(500) .* 10 .+ 50
-        scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
-        plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
+	GAN_sample_data = randn(500) .* 10 .+ 50
+	scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
+	plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
 end
 
 # ╔═╡ 8eb58bf5-63a0-41fa-87df-747bc118b4f0
 # ╠═╡ show_logs = false
 begin
-        above_data = rand(65:100, 500)
-        below_data = rand(1:35, 500)
+	above_data = rand(65:100, 500)
+	below_data = rand(1:35, 500)
 
-        GAN_below_model = LogisticRegression(fit_intercept=true, max_iter=200)
-        fit!(GAN_below_model, reshape([GAN_sample_data; below_data], :, 1), reshape([zeros(length(GAN_sample_data)); ones(length(below_data))], :, 1))
-        GAN_below_decision_boundary = findfirst(x -> x > 0.5, predict_proba(GAN_below_model, reshape(LinRange(0, 500, 500), :, 1))[:, 1])
+	GAN_below_model = LogisticRegression(fit_intercept=true, max_iter = 200)
+	fit!(GAN_below_model, reshape([GAN_sample_data; below_data], :, 1), reshape([zeros(length(GAN_sample_data)); ones(length(below_data))], :, 1))
+	GAN_below_decision_boundary = findfirst(x -> x > 0.5, predict_proba(GAN_below_model, reshape(LinRange(0, 500, 500), :, 1))[:, 1])
 
-        GAN_above_model = LogisticRegression(fit_intercept=true, max_iter=200)
-        fit!(GAN_above_model, reshape([GAN_sample_data; above_data], :, 1), reshape([zeros(length(GAN_sample_data)); ones(length(above_data))], :, 1))
-        GAN_above_decision_boundary = findfirst(x -> x < 0.5, predict_proba(GAN_above_model, reshape(LinRange(0, 500, 500), :, 1))[:, 1])
+	GAN_above_model = LogisticRegression(fit_intercept=true, max_iter = 200)
+	fit!(GAN_above_model, reshape([GAN_sample_data; above_data], :, 1), reshape([zeros(length(GAN_sample_data)); ones(length(above_data))], :, 1))
+	GAN_above_decision_boundary = findfirst(x -> x < 0.5, predict_proba(GAN_above_model, reshape(LinRange(0, 500, 500), :, 1))[:, 1])
 
-        scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
-        plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
-        vline!([GAN_below_decision_boundary, GAN_above_decision_boundary], lw=3, color="red")
+	scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
+	plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
+	vline!([GAN_below_decision_boundary, GAN_above_decision_boundary], lw=3, color="red")
 end
 
 # ╔═╡ 1f836fb8-181d-4748-9b30-670a59e0e64e
 begin
-        GAN_positive_samples = []
-        GAN_negative_samples = []
-        GAN_min = [0]
-        GAN_max = [100]
-        for i in 1:30
-                iter_samples = rand(GAN_min[i]:GAN_max[i], 25)
-                GAN_generation_iter_positive = filter(x -> ((x > GAN_below_decision_boundary) & (x < GAN_above_decision_boundary)), iter_samples)
+	GAN_positive_samples = []
+	GAN_negative_samples = []
+	GAN_min = [0]
+	GAN_max = [100]
+	for i in 1:30
+		iter_samples = rand(GAN_min[i]:GAN_max[i], 25)
+		GAN_generation_iter_positive = filter(x -> ((x > GAN_below_decision_boundary) & (x < GAN_above_decision_boundary)), iter_samples)
 
-                GAN_generation_iter_negative = filter(x -> ((x < GAN_below_decision_boundary) | (x > GAN_above_decision_boundary)), iter_samples)
+		GAN_generation_iter_negative = filter(x -> ((x < GAN_below_decision_boundary) | (x > GAN_above_decision_boundary)), iter_samples)
 
-                push!(GAN_positive_samples, GAN_generation_iter_positive)
-                push!(GAN_negative_samples, GAN_generation_iter_negative)
+		push!(GAN_positive_samples, GAN_generation_iter_positive)
+		push!(GAN_negative_samples, GAN_generation_iter_negative)
 
-                next_min = max(filter(x -> (x < GAN_below_decision_boundary), GAN_generation_iter_negative[1:min(1, length(GAN_generation_iter_negative))])..., GAN_min[i])
+		next_min = max(filter(x -> (x < GAN_below_decision_boundary), GAN_generation_iter_negative[1:min(1, length(GAN_generation_iter_negative))])..., GAN_min[i])
+		
+		next_max = min(filter(x -> (x > GAN_above_decision_boundary), GAN_generation_iter_negative[1:min(1, length(GAN_generation_iter_negative))])..., GAN_max[i])
 
-                next_max = min(filter(x -> (x > GAN_above_decision_boundary), GAN_generation_iter_negative[1:min(1, length(GAN_generation_iter_negative))])..., GAN_max[i])
-
-                push!(GAN_min, next_min)
-                push!(GAN_max, next_max)
-        end
+		push!(GAN_min, next_min)
+		push!(GAN_max, next_max)
+	end
 end
 
 # ╔═╡ c516b287-ba5f-48f8-92b6-95549df984af
@@ -454,14 +450,14 @@ end
 
 # ╔═╡ aae2dcef-7819-4528-8bbb-b0f15b84ca38
 begin
-        GAN_generation_first_iter = rand(0:100, 25)
+	GAN_generation_first_iter = rand(0:100, 25)
+	
 
-
-        scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
-        plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
-        vline!([GAN_below_decision_boundary, GAN_above_decision_boundary], lw=3, color="red")
-        scatter!(GAN_positive_samples[GAN_iter], zeros(length(GAN_positive_samples[GAN_iter])) .+ 0.02, color="green")
-        scatter!(GAN_negative_samples[GAN_iter], zeros(length(GAN_negative_samples[GAN_iter])) .+ 0.02, color="red")
+	scatter(GAN_sample_data, zeros(length(GAN_sample_data)), xlim=(0, 100))
+	plot!(Normal(mean(GAN_sample_data), std(GAN_sample_data)), lw=5)
+	vline!([GAN_below_decision_boundary, GAN_above_decision_boundary], lw=3, color="red")
+	scatter!(GAN_positive_samples[GAN_iter], zeros(length(GAN_positive_samples[GAN_iter])) .+ 0.02, color="green")
+	scatter!(GAN_negative_samples[GAN_iter], zeros(length(GAN_negative_samples[GAN_iter])) .+ 0.02, color="red")
 end
 
 # ╔═╡ fa508933-709c-4d17-9f6b-004a2ae7ab6a
@@ -494,39 +490,39 @@ A simple example is a linear transform. If we start with a standard normal distr
 
 # ╔═╡ 1c5329c9-1cbe-48d6-a5ec-ebd185888dc5
 begin
-        bins = [zip(0:99, 1:100)...]
-        centers = map(b -> ((b[1] + b[2]) / 2), bins)
-        initial_counts = pdf(Normal(50, 10), centers) * 1
-        # length(initial_counts)
-        bar(centers, initial_counts)
+	bins = [zip(0:99, 1:100)...]
+	centers = map(b -> ((b[1] + b[2])/2), bins)
+	initial_counts = pdf(Normal(50, 10), centers) * 1
+	# length(initial_counts)
+	bar(centers, initial_counts)
 end
 
 # ╔═╡ 0ba6585d-20a3-4ec4-966c-0ff5a37a0d15
 begin
-        flow_width_transform = map(b -> ((rand() + 1)^4), bins)
-        # flow_width_transform = map(b -> (exp(b[1] / 20)), bins)
-        transformed_bins = accumulate((b, w) -> (b[2], b[2] + w), flow_width_transform, init=(0.0, 0.0))
-        # transformed_samples = []
-        # for (i, b) in enumerate(transformed_bins)
-        # 	bin_count = floor(Int, initial_counts[i])
-        # 	if bin_count == 1
-        # 		transformed_samples_t = [transformed_samples_t; (b[1] + b[2]) / 2]
-        # 	elseif bin_count > 1
-        # 		transformed_samples_t = [transformed_samples_t; LinRange(b[1], b[2], bin_count)]
-        # 	end
-        # end
-
-        # transformed_samples
-        # histogram(transformed_samples, bins=100)
-        rect(w, h, x, y) = Shape(x .+ [0, w, w, 0, 0], y .+ [0, 0, h, h, 0])
-        b = plot()
-        for (c, b) in enumerate(transformed_bins)
-                # plot!(Shape([0, 0, 25, 25], [0, 100, 100, 0]))
-                height = initial_counts[c] / (b[2] - b[1])
-                plot!(Shape([b[1], b[1], b[2], b[2]], [0, height, height, 0]), label="", color="blue")
-        end
-        b
-
+	flow_width_transform = map(b -> ((rand() + 1)^4), bins)
+	# flow_width_transform = map(b -> (exp(b[1] / 20)), bins)
+	transformed_bins = accumulate((b, w) -> (b[2], b[2] + w), flow_width_transform, init=(0.0, 0.0))
+	# transformed_samples = []
+	# for (i, b) in enumerate(transformed_bins)
+	# 	bin_count = floor(Int, initial_counts[i])
+	# 	if bin_count == 1
+	# 		transformed_samples_t = [transformed_samples_t; (b[1] + b[2]) / 2]
+	# 	elseif bin_count > 1
+	# 		transformed_samples_t = [transformed_samples_t; LinRange(b[1], b[2], bin_count)]
+	# 	end
+	# end
+	
+	# transformed_samples
+	# histogram(transformed_samples, bins=100)
+	rect(w, h, x, y) = Shape(x .+ [0, w, w, 0, 0], y .+ [0, 0, h, h, 0])
+	b = plot()
+	for (c, b) in enumerate(transformed_bins)
+		# plot!(Shape([0, 0, 25, 25], [0, 100, 100, 0]))
+		height = initial_counts[c] / (b[2] - b[1])
+		plot!(Shape([b[1], b[1], b[2], b[2]], [0, height, height, 0]), label="", color="blue")
+	end;
+	b
+	
 end
 
 # ╔═╡ 92da23df-2882-48e3-b22e-19e6082599fb
@@ -554,9 +550,9 @@ In a VAE, we have a distribution of the latent variable, $p(z)$, which we usuall
 
 # ╔═╡ 186e740d-b5a4-49c8-b411-f4c89b2eb453
 begin
-        VAE_latents = randn(10000)
-        VAE_x = map(z -> randn((2, 1)) .* exp(z * 0.3) .+ (z, z), VAE_latents)
-        scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1)
+	VAE_latents = randn(10000)
+	VAE_x = map(z -> randn((2, 1)).*exp(z*0.3) .+ (z, z), VAE_latents)
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1)
 end
 
 # ╔═╡ fafd81aa-87bc-40bf-bf8d-060532e0600e
@@ -568,23 +564,23 @@ We could have a variable $z$ distributed as a Gaussian, generating the mean loca
 
 # ╔═╡ 371d025b-1f38-442f-8f6e-11277766e507
 begin
-        possible_latents = LinRange(-4, 4, 1000)
-        @bind VAE_test Slider(1:50:1000)
+	possible_latents = LinRange(-4, 4, 1000)
+	@bind VAE_test Slider(1:50:1000)
 end
 
 # ╔═╡ 34473ac9-1c5a-44b4-a0f1-327623c3b672
 begin
-        selected_z = possible_latents[VAE_test]
-        plot(possible_latents, [pdf(Normal(), z) for z in possible_latents], title="Sample of z")
-        vline!([selected_z], color="red")
+	selected_z = possible_latents[VAE_test]
+	plot(possible_latents, [pdf(Normal(), z) for z in possible_latents], title="Sample of z")
+	vline!([selected_z], color="red")
 end
-
+	
 
 # ╔═╡ 4e4fe325-69f4-4ebb-b331-e53621f5d9c5
 begin
-        scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
-        selected_z_sample = randn((2, 1000)) .+ (selected_z, selected_z)
-        scatter!(selected_z_sample[1, :], selected_z_sample[2, :], alpha=pdf(Normal(), selected_z) * 2 + 0.2)
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
+	selected_z_sample = randn((2, 1000)) .+ (selected_z, selected_z)
+	scatter!(selected_z_sample[1, :], selected_z_sample[2, :], alpha=pdf(Normal(), selected_z)*2 + 0.2)
 end
 
 # ╔═╡ 6f60bea9-3afe-479c-9857-4889311a0eb5
@@ -599,12 +595,12 @@ First, we sample an observation $x$ from the data generating process. Usually, t
 
 # ╔═╡ 5ef7aff2-60aa-4434-b23b-6c63524acd0b
 begin
-        vae_x_mat = mapreduce(permutedims, vcat, VAE_x)
-        selected_x = vae_x_mat[sortperm(vae_x_mat[:, 1]), :][VAE_pzx, :]
-
-        pzx = map(z -> (pdf(MvNormal([z, z], exp(z * 0.3)), selected_x))[1], possible_latents)
-        scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
-        scatter!([selected_x[1]], [selected_x[2]])
+	vae_x_mat = mapreduce(permutedims, vcat, VAE_x)
+	selected_x = vae_x_mat[sortperm(vae_x_mat[:, 1]), :][VAE_pzx, :]
+	
+	pzx = map(z -> (pdf(MvNormal([z, z], exp(z*0.3)), selected_x))[1], possible_latents)
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
+	scatter!([selected_x[1]], [selected_x[2]])
 end
 
 # ╔═╡ 00bb5276-fac1-4e88-8263-c2827c0205b0
@@ -616,8 +612,8 @@ Remember that $q(z|x)$ is only approximating the true distribution $p(z|x)$, but
 
 # ╔═╡ b5547fb9-de04-40ab-a0d6-adcc74c58f35
 begin
-        plot(possible_latents, pzx, xlim=(-5, 5), label="True p(z|x)")
-        plot!(possible_latents, pdf(Normal(possible_latents[findmax(pzx)[2]]), possible_latents), label="Approximated q(z|x)")
+	plot(possible_latents, pzx, xlim=(-5, 5), label="True p(z|x)")
+	plot!(possible_latents, pdf(Normal(possible_latents[findmax(pzx)[2]]), possible_latents), label="Approximated q(z|x)")
 end
 
 # ╔═╡ 0ddb4051-0b46-4630-9830-191f946fef4e
@@ -628,17 +624,17 @@ From $q(z|x)$, we sample an observation $\bar{z}$.  We do this within pytorch as
 
 # ╔═╡ 551bd357-0866-424f-9908-0fec38a665ef
 begin
-        vae_q_sample = rand(Normal(possible_latents[findmax(pzx)[2]]))
-        vline!([vae_q_sample], label="Sample z")
+	vae_q_sample = rand(Normal(possible_latents[findmax(pzx)[2]]))
+	vline!([vae_q_sample], label="Sample z")
 end
 
 # ╔═╡ 50737e6b-2cf9-4349-bddb-972da5ee44f3
 begin
-        reconstructed_x = randn((2, 1)) .* exp(vae_q_sample * 0.3) .+ (vae_q_sample, vae_q_sample)
-        scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
-        scatter!([selected_x[1]], [selected_x[2]])
-        scatter!([reconstructed_x[1]], [reconstructed_x[2]])
-        quiver!([reconstructed_x[1]], [reconstructed_x[2]], quiver=([selected_x[1] - reconstructed_x[1]], [selected_x[2] - reconstructed_x[2]]), label="Reconstruction Error")
+	reconstructed_x = randn((2, 1)).*exp(vae_q_sample*0.3) .+ (vae_q_sample, vae_q_sample)
+	scatter([x[1] for x in VAE_x], [x[2] for x in VAE_x], alpha=0.1, xlim=(-5, 5), ylim=(-6, 6))
+	scatter!([selected_x[1]], [selected_x[2]])
+	scatter!([reconstructed_x[1]], [reconstructed_x[2]])
+	quiver!([reconstructed_x[1]], [reconstructed_x[2]], quiver=([selected_x[1] - reconstructed_x[1]], [selected_x[2] - reconstructed_x[2]]), label="Reconstruction Error")
 end
 
 # ╔═╡ 9523db99-d329-4faf-95cf-bf8c95e6d643
@@ -681,33 +677,33 @@ Eventually after enough timesteps $q(z_t|x) = q(z) = N(0, 1)$.
 
 # ╔═╡ af05d92e-894d-4f83-b869-507c4b1907f6
 begin
-        diff_1d_sample
-        diffusion_1d_x = MixtureModel([Normal(rand() * 2 - 1, 0.1), Normal(rand() * 2 - 1, 0.05)])
-        plot(LinRange(-1, 1, 1000), pdf(diffusion_1d_x, LinRange(-1, 1, 1000)), title="Distribution of X")
+	diff_1d_sample
+	diffusion_1d_x = MixtureModel([Normal(rand()*2 - 1, 0.1), Normal(rand()*2 - 1, 0.05)])
+	plot(LinRange(-1, 1, 1000), pdf(diffusion_1d_x, LinRange(-1, 1, 1000)), title="Distribution of X")
 end
 
 # ╔═╡ d03210b5-2b60-4e3c-bdb5-23879277254c
 begin
-        diffusion_1d_beta = 0.03
-        samples_x = []
-        samples_y = []
-        diffused_x = repeat([rand(diffusion_1d_x)], 1000)
-        push!(samples_x, diffused_x)
-        push!(samples_y, ones(length(diffused_x)) .* 0)
-
-        for t in 1:100
-                e = randn(length(diffused_x))
-                diffused_x = diffused_x .* sqrt(1 - diffusion_1d_beta) .+ sqrt(diffusion_1d_beta) .* e
-                push!(samples_x, diffused_x)
-                push!(samples_y, ones(length(diffused_x)) .* t)
-        end
-        x_mat = mapreduce(permutedims, vcat, samples_x)
-        y_mat = mapreduce(permutedims, vcat, samples_y)
-        p = plot(x_mat[:, 1], y_mat[:, 1], xlim=[-3, 3], label=false, color="blue", alpha=0.1)
-        for i in 2:size(x_mat)[2]
-                plot!(x_mat[:, i], y_mat[:, i], label=false, color="blue", alpha=0.1)
-        end
-        p
+	diffusion_1d_beta = 0.03
+	samples_x = []
+	samples_y = []
+	diffused_x = repeat([rand(diffusion_1d_x)], 1000)
+	push!(samples_x, diffused_x)
+	push!(samples_y, ones(length(diffused_x)) .* 0)
+	
+	for t in 1:100
+		e = randn(length(diffused_x))
+		diffused_x = diffused_x .* sqrt(1-diffusion_1d_beta) .+ sqrt(diffusion_1d_beta) .* e
+		push!(samples_x, diffused_x)
+		push!(samples_y, ones(length(diffused_x)) .* t)
+	end
+	x_mat = mapreduce(permutedims, vcat, samples_x)
+	y_mat = mapreduce(permutedims, vcat, samples_y)
+	p = plot(x_mat[:, 1], y_mat[:, 1], xlim=[-3, 3], label=false, color="blue", alpha=0.1)
+	for i in 2:size(x_mat)[2]
+		plot!(x_mat[:, i], y_mat[:, i], label=false, color="blue", alpha=0.1)
+	end
+	p
 end
 
 # ╔═╡ 15903f6f-4103-4192-a244-26a36c47f5cb
@@ -740,51 +736,51 @@ Essentially optimizing the EBLO simplifies to training each model to minimize th
 
 # ╔═╡ f1ce89ff-47ed-4808-a88f-6baa0f8b3ad0
 begin
-        function make_spiral(rng::AbstractRNG, n_samples::Int=1000)
-                t_min = 1.5π
-                t_max = 4.5π
+	function make_spiral(rng::AbstractRNG, n_samples::Int=1000)
+	    t_min = 1.5π
+	    t_max = 4.5π
+	
+	    t = rand(rng, n_samples) * (t_max - t_min) .+ t_min
+	
+	    x = t .* cos.(t)
+	    y = t .* sin.(t)
+	
+	    permutedims([x y], (2, 1))
+	end
+	make_spiral(n_samples::Int=1000) = make_spiral(Random.GLOBAL_RNG, n_samples)
 
-                t = rand(rng, n_samples) * (t_max - t_min) .+ t_min
+	function normalize_zero_to_one(x)
+	    x_min, x_max = extrema(x)
+	    x_norm = (x .- x_min) ./ (x_max - x_min)
+	    x_norm
+	end
+	
+	function normalize_neg_one_to_one(x)
+	    2 * normalize_zero_to_one(x) .- 1
+	end
 
-                x = t .* cos.(t)
-                y = t .* sin.(t)
-
-                permutedims([x y], (2, 1))
-        end
-        make_spiral(n_samples::Int=1000) = make_spiral(Random.GLOBAL_RNG, n_samples)
-
-        function normalize_zero_to_one(x)
-                x_min, x_max = extrema(x)
-                x_norm = (x .- x_min) ./ (x_max - x_min)
-                x_norm
-        end
-
-        function normalize_neg_one_to_one(x)
-                2 * normalize_zero_to_one(x) .- 1
-        end
-
-        function linear_beta_schedule(num_timesteps::Int, β_start=0.0001f0, β_end=0.02f0)
-                scale = convert(typeof(β_start), 1000 / num_timesteps)
-                β_start *= scale
-                β_end *= scale
-                range(β_start, β_end; length=num_timesteps)
-        end
+	function linear_beta_schedule(num_timesteps::Int, β_start=0.0001f0, β_end=0.02f0)
+	    scale = convert(typeof(β_start), 1000 / num_timesteps)
+	    β_start *= scale
+	    β_end *= scale
+	    range(β_start, β_end; length=num_timesteps)
+	end
 end;
 
 # ╔═╡ ce8ef6ab-dc42-42db-8a08-191a221ada15
 begin
-        diff_spiral_n_samples = 1000
-        diff_spiral_X = normalize_neg_one_to_one(make_spiral(diff_spiral_n_samples))
-        scatter(diff_spiral_X[1, :], diff_spiral_X[2, :],
-                alpha=0.5,
-                aspectratio=:equal,
-        )
+	diff_spiral_n_samples = 1000
+	diff_spiral_X = normalize_neg_one_to_one(make_spiral(diff_spiral_n_samples))
+	scatter(diff_spiral_X[1, :], diff_spiral_X[2, :], 
+	    alpha=0.5,
+	    aspectratio=:equal,
+	    )
 end
 
 # ╔═╡ 53157f04-5c5c-4ec3-9b9a-fa5719136486
 begin
-        num_timesteps = 40
-        βs = linear_beta_schedule(num_timesteps, 8e-6, 9e-5)
+	num_timesteps = 40
+	βs = linear_beta_schedule(num_timesteps, 8e-6, 9e-5)
 end
 
 # ╔═╡ c64188a9-8630-4119-9a48-0b60de93d4f4
@@ -792,126 +788,126 @@ end
 
 # ╔═╡ 944d7251-06df-4fc1-9b0d-aab5b0ab6510
 begin
-        diff_spiral_frames = []
-        diff_spiral_vals = copy(diff_spiral_X)
-        push!(diff_spiral_frames, diff_spiral_vals)
-        for t in 1:num_timesteps
-                mu = diff_spiral_vals .* sqrt(1 - βs[t])
-                noise = randn((2, size(diff_spiral_vals, 2)))
-                sigma = sqrt(βs[t])
-                diff_spiral_vals = mu + sigma .* noise
-                push!(diff_spiral_frames, diff_spiral_vals)
-        end
+	diff_spiral_frames = []
+	diff_spiral_vals = copy(diff_spiral_X)
+	push!(diff_spiral_frames, diff_spiral_vals)
+	for t in 1:num_timesteps
+		mu = diff_spiral_vals .* sqrt(1 - βs[t])
+		noise = randn((2, size(diff_spiral_vals, 2)))
+		sigma = sqrt(βs[t])
+		diff_spiral_vals = mu + sigma .* noise
+		push!(diff_spiral_frames, diff_spiral_vals)
+	end
 end
 
 # ╔═╡ 3da6db2d-fe32-4b92-8875-eb39e1162745
 begin
-        scatter(
-                diff_spiral_frames[diff_spiral_t][1, :],
-                diff_spiral_frames[diff_spiral_t][2, :],
-                xlim=(-2, 2),
-                ylim=(-2, 2)
-        )
+	scatter(
+		diff_spiral_frames[diff_spiral_t][1, :],
+		diff_spiral_frames[diff_spiral_t][2, :],
+		xlim=(-2, 2),
+		ylim=(-2, 2)
+	)
 end
 
 # ╔═╡ e8504109-ae23-47a3-a960-3c85e4bcc31e
 begin
-        diffusion_1d_beta_learn = 0.005
-        samples_x_learn = []
-        diffused_x_learn = rand(diffusion_1d_x, 1000000)
-        push!(samples_x_learn, diffused_x_learn)
-
-
-        for t in 1:100
-                e = randn(length(diffused_x_learn))
-                diffused_x_learn = diffused_x_learn .* sqrt(1 - diffusion_1d_beta_learn) .+ sqrt(diffusion_1d_beta_learn) .* e
-                push!(samples_x_learn, diffused_x_learn)
-        end
-        x_mat_learn = reduce(hcat, samples_x_learn)
-        # p_learn = plot(x_mat_learn[1, :], 1:101, xlim=[-3, 3], label=false, color="blue", alpha=0.1)
-        # for i in 2:size(x_mat_learn)[1]
-        # 	plot!(x_mat_learn[i, :], 1:101, label=false, color="blue", alpha=0.1)
-        # end
-        # p_learn
+	diffusion_1d_beta_learn = 0.005
+	samples_x_learn = []
+	diffused_x_learn = rand(diffusion_1d_x, 1000000)
+	push!(samples_x_learn, diffused_x_learn)
+	
+	
+	for t in 1:100
+		e = randn(length(diffused_x_learn))
+		diffused_x_learn = diffused_x_learn .* sqrt(1-diffusion_1d_beta_learn) .+ sqrt(diffusion_1d_beta_learn) .* e
+		push!(samples_x_learn, diffused_x_learn)
+	end
+	x_mat_learn = reduce(hcat, samples_x_learn)
+	# p_learn = plot(x_mat_learn[1, :], 1:101, xlim=[-3, 3], label=false, color="blue", alpha=0.1)
+	# for i in 2:size(x_mat_learn)[1]
+	# 	plot!(x_mat_learn[i, :], 1:101, label=false, color="blue", alpha=0.1)
+	# end
+	# p_learn
 end;
 
 # ╔═╡ 5e308af3-9ad3-4035-a117-d56ff966dd41
 begin
-        function to_bin(bin_edges, val)
-                return searchsortedfirst(bin_edges[2:length(bin_edges)-1], val)
-        end
+	function to_bin(bin_edges, val)
+		return searchsortedfirst(bin_edges[2:length(bin_edges)-1], val)
+	end
 
-        function from_bin(bin_edges, binned_val)
-                bin_idx = Int(floor(binned_val))
-                return (bin_edges[bin_idx] + bin_edges[bin_idx+1]) / 2
-        end
-
-        function bin_data(d::AbstractVector, bin_edges::AbstractVector)::AbstractVector
-                bin_counts = zeros(length(bin_edges))
-                for val in d
-                        idx = to_bin(bin_edges, val)
-                        bin_counts[idx] += 1
-                end
-                return bin_counts
-        end
+	function from_bin(bin_edges, binned_val)
+		bin_idx = Int(floor(binned_val))
+		return (bin_edges[bin_idx] + bin_edges[bin_idx + 1]) / 2
+	end
+	
+	function bin_data(d::AbstractVector, bin_edges::AbstractVector)::AbstractVector
+		bin_counts = zeros(length(bin_edges))
+		for val in d
+			idx = to_bin(bin_edges, val)
+			bin_counts[idx] += 1
+		end
+		return bin_counts
+	end
 
 
 end;
 
 # ╔═╡ 26281e22-763e-4cfd-bf30-8a691621ad75
 begin
-        bin_edges = LinRange(-3, 3, 10000)
-        binned_x_mat_learn = reduce(hcat, [bin_data(xd, bin_edges) for xd in samples_x_learn])
-        l = @layout [a; b; c]
-        p3 = bar(bin_edges, binned_x_mat_learn[:, 1], showaxis=false, legend=false)
-        p2 = heatmap(binned_x_mat_learn', showaxis=false, legend=false)
-        p1 = bar(bin_edges, binned_x_mat_learn[:, 100], showaxis=false, legend=false)
-        plot(p1, p2, p3, layout=l, size=(1000, 2000))
+	bin_edges = LinRange(-3, 3, 10000)
+	binned_x_mat_learn = reduce(hcat, [bin_data(xd, bin_edges) for xd in samples_x_learn])
+	l = @layout [a; b; c]
+	p3 = bar(bin_edges, binned_x_mat_learn[:, 1], showaxis=false, legend=false)
+	p2 = heatmap(binned_x_mat_learn', showaxis=false, legend=false)
+	p1 = bar(bin_edges, binned_x_mat_learn[:, 100], showaxis=false, legend=false)
+	plot(p1, p2, p3, layout=l, size=(1000, 2000))
 end
 
 # ╔═╡ 1c363e40-9b4c-43e3-b57f-dff934f25a1e
 begin
-        discrete_diffusion = map(v -> (to_bin(bin_edges, v)), x_mat_learn)
-        diffusion_t_models = []
-        for t in 2:size(discrete_diffusion)[2]
-                timestep_layer = discrete_diffusion[:, t]
-                prev_timestep_layer = discrete_diffusion[:, t-1]
-                bin_prevs = []
-                for i in 1:length(bin_edges)
-                        push!(bin_prevs, [])
-                end
-                for i in 1:length(timestep_layer)
-                        push!(bin_prevs[timestep_layer[i]], prev_timestep_layer[i])
-                end
-                push!(diffusion_t_models, Impute.interp([length(prevs) > 0 ? mean(prevs) : missing for prevs in bin_prevs]) |> Impute.locf() |> Impute.nocb())
-        end
+	discrete_diffusion = map(v -> (to_bin(bin_edges, v)), x_mat_learn)
+	diffusion_t_models = []
+	for t in 2:size(discrete_diffusion)[2]
+		timestep_layer = discrete_diffusion[:, t]
+		prev_timestep_layer = discrete_diffusion[:, t-1]
+		bin_prevs = []
+		for i in 1:length(bin_edges)
+			push!(bin_prevs, [])
+		end
+		for i in 1:length(timestep_layer)
+			push!(bin_prevs[timestep_layer[i]], prev_timestep_layer[i])
+		end
+		push!(diffusion_t_models, Impute.interp([length(prevs) > 0 ? mean(prevs) : missing for prevs in bin_prevs]) |> Impute.locf() |> Impute.nocb())
+	end
 end
 
 # ╔═╡ 48a3cb0c-4043-4680-8ae0-aad63621b8b9
 begin
-        function reverse_diffusion(val, diffusion_models, bin_edges)
-                path::Vector{Float64} = [val]
-                current_val = to_bin(bin_edges, val)
-                for t in length(diffusion_models):-1:1
-                        next_mean = diffusion_models[t][current_val]
-                        push!(path, from_bin(bin_edges, next_mean))
-                        # push!(path, next_mean)
-                        current_val = Int(floor(next_mean))
-                end
-                return path
-        end
+	function reverse_diffusion(val, diffusion_models, bin_edges)
+		path::Vector{Float64} = [val]
+		current_val = to_bin(bin_edges, val)
+		for t in length(diffusion_models):-1:1
+			next_mean = diffusion_models[t][current_val]
+			push!(path, from_bin(bin_edges, next_mean))
+			# push!(path, next_mean)
+			current_val = Int(floor(next_mean))
+		end
+		return path
+	end
 end;
 
 # ╔═╡ 5939d4bb-fe43-41d3-aaac-22a8722dbb2e
 begin
-        reverse_diffusion_mat = reduce(hcat, [reverse_diffusion(randn() * 1, diffusion_t_models, bin_edges) for i in 1:5000])'
-        _p = plot(reverse_diffusion_mat[1, :], 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
-        for i in 1:1000
-                plot!(reverse_diffusion(randn() * 3, diffusion_t_models, bin_edges), 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
-        end
-        _p3 = plot(histogram(reverse_diffusion_mat[:, 1], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
-        _p1 = plot(histogram(reverse_diffusion_mat[:, size(reverse_diffusion_mat)[2]], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
-        plot(_p3, _p, _p1, layout=l, size=(1000, 2000))
+	reverse_diffusion_mat = reduce(hcat, [reverse_diffusion(randn() * 1, diffusion_t_models, bin_edges) for i in 1:5000])'
+	_p = plot(reverse_diffusion_mat[1, :], 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
+	for i in 1:1000
+		plot!(reverse_diffusion(randn() * 3, diffusion_t_models, bin_edges), 101:-1:1, xlim=[-3, 3], label=false, color="blue", alpha=1)
+	end
+	_p3 = plot(histogram(reverse_diffusion_mat[:, 1], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
+	_p1 = plot(histogram(reverse_diffusion_mat[:, size(reverse_diffusion_mat)[2]], bins=100), showaxis=false, legend=false, xlim=[-3, 3])
+	plot(_p3, _p, _p1, layout=l, size=(1000, 2000))
 end
 
 # ╔═╡ bfd7f3db-63cb-42bb-99f7-463257dc86ff
@@ -922,15 +918,15 @@ end
 
 # ╔═╡ cf122175-71c8-49e0-9375-84cbab13814c
 begin
-        rev_diffusion_1d_resample
-        rev_diffusion_1d_start = randn()
-        path = reverse_diffusion(rev_diffusion_1d_start, diffusion_t_models, bin_edges)
+	rev_diffusion_1d_resample
+	rev_diffusion_1d_start = randn()
+	path = reverse_diffusion(rev_diffusion_1d_start, diffusion_t_models, bin_edges)
 end;
 
 # ╔═╡ ea9daae8-c000-4d65-b64a-772fabd4694d
 begin
-        xs = path[1:rev_diffusion_1d_t]
-        plot(xs, 100:-1:101-length(xs), xlim=(-3, 3), ylim=(0, 100))
+	xs = path[1:rev_diffusion_1d_t]
+	plot(xs, 100:-1:101-length(xs), xlim=(-3, 3), ylim=(0, 100))
 end
 
 # ╔═╡ 85edb406-9584-418b-a86c-f68b6b82ca3d
@@ -939,16 +935,6 @@ length(xs)
 # ╔═╡ f5407a86-11e6-42cf-98ea-4a0e85a9e0ee
 md"""
 ### Score Matching
-
-Score matching is a method of representing the distribution of a data generating process by learning its _gradient_. This gradient is also known as a _score function_.
-
-###### Why would we learn the gradient rather than the function directly?
-
-Remember that the hard part of learning a distribution is the normalizing constant, the part that keeps the probability summing to 1. However, the gradient of a function dosen't need this normalization, so we can skip the difficult part of the calculation.
-
-The tricky part is how we learn the gradient in the first place. While we can build a training set of $x$ observations to learn $p(X)$, we don't have any direct observations of the gradient of $p(x)$ at these points. We can use a technique called _score matching_ to learn this objective without needing the gradient. The basic idea is that $p(X)$ should have local maxima around the observations in the training set, so the gradient should be 0.
-
-#### Score matching Objective
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -956,7 +942,6 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Impute = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
 KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
@@ -970,7 +955,6 @@ StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 [compat]
 Colors = "~0.12.10"
 Distributions = "~0.25.107"
-Flux = "~0.14.10"
 Images = "~0.26.0"
 Impute = "~0.6.11"
 KernelDensity = "~0.6.8"
@@ -987,11 +971,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-<<<<<<< HEAD
-project_hash = "8e56dd4c53d4ea12ee36ba9e1e99557ed0bdf815"
-=======
 project_hash = "4f3cd6bd53f1978864a95b5387a1c938f821b046"
->>>>>>> a9922b93b4b15d34e8c7b1e1c4870d4fc9fe3775
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1012,9 +992,9 @@ version = "1.2.3"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "cde29ddf7e5726c9fb511f340244ea3481267608"
+git-tree-sha1 = "0fb305e0253fd4e833d486914367a2ee2c2e78d0"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "3.7.2"
+version = "4.0.1"
 weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -1192,12 +1172,6 @@ git-tree-sha1 = "a0f80a09780eed9b1d106a1bf62041c2efc995bc"
 uuid = "aafaddc9-749c-510e-ac4f-586e18779b91"
 version = "0.2.2"
 
-[[deps.ChainRules]]
-deps = ["Adapt", "ChainRulesCore", "Compat", "Distributed", "GPUArraysCore", "IrrationalConstants", "LinearAlgebra", "Random", "RealDot", "SparseArrays", "SparseInverseSubset", "Statistics", "StructArrays", "SuiteSparse"]
-git-tree-sha1 = "b308c249f38637cc5022c079fe5e19701a160395"
-uuid = "082447d4-558c-5d27-93f4-14fc19e9eca2"
-version = "1.60.0"
-
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
 git-tree-sha1 = "1287e3872d646eed95198457873249bd9f0caed2"
@@ -1265,12 +1239,6 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
-
-[[deps.CommonSubexpressions]]
-deps = ["MacroTools", "Test"]
-git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
-uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
-version = "0.3.0"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -1407,18 +1375,6 @@ deps = ["Mmap"]
 git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
-
-[[deps.DiffResults]]
-deps = ["StaticArraysCore"]
-git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
-uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
-version = "1.1.0"
-
-[[deps.DiffRules]]
-deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
-git-tree-sha1 = "23163d55f885173722d1e4cf0f6110cdbaf7e272"
-uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.15.1"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
@@ -1561,24 +1517,6 @@ git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.4"
 
-[[deps.Flux]]
-deps = ["Adapt", "ChainRulesCore", "Compat", "Functors", "LinearAlgebra", "MLUtils", "MacroTools", "NNlib", "OneHotArrays", "Optimisers", "Preferences", "ProgressLogging", "Random", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "Zygote"]
-git-tree-sha1 = "0f018f81c5221f6b7aaf93d50d97e447686767f0"
-uuid = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-version = "0.14.10"
-
-    [deps.Flux.extensions]
-    FluxAMDGPUExt = "AMDGPU"
-    FluxCUDAExt = "CUDA"
-    FluxCUDAcuDNNExt = ["CUDA", "cuDNN"]
-    FluxMetalExt = "Metal"
-
-    [deps.Flux.weakdeps]
-    AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-    Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
-    cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
-
 [[deps.Fontconfig_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Expat_jll", "FreeType2_jll", "JLLWrappers", "Libdl", "Libuuid_jll", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "21efd19106a55620a188615da6d3d06cd7f6ee03"
@@ -1590,16 +1528,6 @@ deps = ["Printf"]
 git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
-
-[[deps.ForwardDiff]]
-deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
-git-tree-sha1 = "cf0fe81336da9fb90944683b8c41984b08793dad"
-uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.36"
-weakdeps = ["StaticArrays"]
-
-    [deps.ForwardDiff.extensions]
-    ForwardDiffStaticArraysExt = "StaticArrays"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
@@ -1613,12 +1541,6 @@ git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.10+0"
 
-[[deps.Functors]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "9a68d75d466ccc1218d0552a8e1631151c569545"
-uuid = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
-version = "0.4.5"
-
 [[deps.Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
@@ -1629,17 +1551,11 @@ git-tree-sha1 = "ff38ba61beff76b8f4acad8ab0c97ef73bb670cb"
 uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
 version = "3.3.9+0"
 
-[[deps.GPUArrays]]
-deps = ["Adapt", "GPUArraysCore", "LLVM", "LinearAlgebra", "Printf", "Random", "Reexport", "Serialization", "Statistics"]
-git-tree-sha1 = "85d7fb51afb3def5dcb85ad31c3707795c8bccc1"
-uuid = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
-version = "9.1.0"
-
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "2d6ca471a6c7b536127afccfa7564b5b39227fe0"
+git-tree-sha1 = "ec632f177c0d990e64d955ccc1b8c04c485a0950"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "UUIDs", "p7zip_jll"]
@@ -1764,12 +1680,6 @@ deps = ["Logging", "Random"]
 git-tree-sha1 = "8b72179abc660bfab5e28472e019392b97d0985c"
 uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
 version = "0.2.4"
-
-[[deps.IRTools]]
-deps = ["InteractiveUtils", "MacroTools", "Test"]
-git-tree-sha1 = "5d8c5713f38f7bc029e26627b687710ba406d0dd"
-uuid = "7869d1d1-7146-5819-86e3-90919afe41df"
-version = "0.4.12"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -1940,10 +1850,10 @@ uuid = "7d512f48-7fb1-5a58-b986-67e6dc259f01"
 version = "0.7.0"
 
 [[deps.Interpolations]]
-deps = ["Adapt", "AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
-git-tree-sha1 = "721ec2cf720536ad005cb38f50dbba7b02419a15"
+deps = ["AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
+git-tree-sha1 = "00a19d6ab0cbdea2978fc23c5a6482e02c192501"
 uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-version = "0.14.7"
+version = "0.14.0"
 
 [[deps.IntervalSets]]
 deps = ["Dates", "Random"]
@@ -2230,11 +2140,15 @@ deps = ["ArrayInterface", "CPUSummary", "CloseOpenIntervals", "DocStringExtensio
 git-tree-sha1 = "0f5648fbae0d015e3abe5867bca2b362f67a5894"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.166"
-weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
 
     [deps.LoopVectorization.extensions]
     ForwardDiffExt = ["ChainRulesCore", "ForwardDiff"]
     SpecialFunctionsExt = "SpecialFunctions"
+
+    [deps.LoopVectorization.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [[deps.MAT]]
 deps = ["BufferedStreams", "CodecZlib", "HDF5", "SparseArrays"]
@@ -2427,12 +2341,6 @@ git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.5+1"
 
-[[deps.OneHotArrays]]
-deps = ["Adapt", "ChainRulesCore", "Compat", "GPUArraysCore", "LinearAlgebra", "NNlib"]
-git-tree-sha1 = "963a3f28a2e65bb87a68033ea4a616002406037d"
-uuid = "0b1bfda6-eb8a-41d2-88d8-f5af5cad476f"
-version = "0.2.5"
-
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
@@ -2472,12 +2380,6 @@ deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pk
 git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
-
-[[deps.Optimisers]]
-deps = ["ChainRulesCore", "Functors", "LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "34205b1204cc83c43cd9cfe53ffbd3b310f6e8c5"
-uuid = "3bd65402-5787-11e9-1adc-39752487f4e2"
-version = "0.3.1"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2651,12 +2553,6 @@ version = "2.3.1"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-
-[[deps.ProgressLogging]]
-deps = ["Logging", "SHA", "UUIDs"]
-git-tree-sha1 = "80d919dee55b9c50e8d9e2da5eeafff3fe58b539"
-uuid = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
-version = "0.1.4"
 
 [[deps.ProgressMeter]]
 deps = ["Distributed", "Printf"]
@@ -2876,12 +2772,6 @@ deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 version = "1.10.0"
 
-[[deps.SparseInverseSubset]]
-deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "52962839426b75b3021296f7df242e40ecfc0852"
-uuid = "dc90abb0-5640-4711-901d-7e5b23a2fada"
-version = "0.1.2"
-
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
 git-tree-sha1 = "e2cfc4012a19088254b3950b85c3c1d8882d864d"
@@ -2991,12 +2881,6 @@ deps = ["PrecompileTools"]
 git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
 uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
-
-[[deps.StructArrays]]
-deps = ["Adapt", "ConstructionBase", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
-git-tree-sha1 = "1b0b1205a56dc288b71b1961d48e351520702e24"
-uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.17"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
@@ -3373,28 +3257,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "49ce682769cd5de6c72dcf1b94ed7790cd08974c"
 uuid = "3161d3a3-bdf6-5164-811a-617609db77b4"
 version = "1.5.5+0"
-
-[[deps.Zygote]]
-deps = ["AbstractFFTs", "ChainRules", "ChainRulesCore", "DiffRules", "Distributed", "FillArrays", "ForwardDiff", "GPUArrays", "GPUArraysCore", "IRTools", "InteractiveUtils", "LinearAlgebra", "LogExpFunctions", "MacroTools", "NaNMath", "PrecompileTools", "Random", "Requires", "SparseArrays", "SpecialFunctions", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "4ddb4470e47b0094c93055a3bcae799165cc68f1"
-uuid = "e88e6eb3-aa80-5325-afca-941959d7151f"
-version = "0.6.69"
-
-    [deps.Zygote.extensions]
-    ZygoteColorsExt = "Colors"
-    ZygoteDistancesExt = "Distances"
-    ZygoteTrackerExt = "Tracker"
-
-    [deps.Zygote.weakdeps]
-    Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
-    Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
-
-[[deps.ZygoteRules]]
-deps = ["ChainRulesCore", "MacroTools"]
-git-tree-sha1 = "27798139afc0a2afa7b1824c206d5e87ea587a00"
-uuid = "700de1a5-db45-46bc-99cf-38207098b444"
-version = "0.2.5"
 
 [[deps.fzf_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
